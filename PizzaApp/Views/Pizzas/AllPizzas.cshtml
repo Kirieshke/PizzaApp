@@ -1,0 +1,38 @@
+﻿@model IEnumerable<PizzaApp.Models.Pizza>
+
+@{
+    ViewData["Title"] = "Index";
+}
+<div class="row">
+    <h2 class="text-center">Select pizza</h2>
+    <form asp-controller="Pizzas" asp-action="AllPizzas" method="get">
+    <p>
+        Title: <input type="text" name="searchText" />
+        <input type="submit" value="Search" />
+        <a asp-action="AllPizzas">Show all pizzas</a>
+    </p>
+    
+    </form>
+        @foreach (var item in Model) 
+        { 
+             <div class="col-md-3" style="border: 2px solid black">
+                <div style="text-align: center; border-bottom: 2px solid maroon">
+                    <h3>@item.Name</h3>
+                </div>
+                <div>
+                    <div class="col-md-8">
+                        <img src="@Url.Content(@item.ImageUrl)" width="150px" height="150px">
+                    </div>
+                    <div class="col-md-3" style="text-align: left">
+                        <b>@item.Description</b>
+                    </div>
+                </div>
+                <div class="col-md-8" style="font-size:18px; border-top: 2px solid maroon; padding: 2px">
+                      <b>@item.Price.ToString()</b> 
+                </div>
+                <div class="col-md-4" style="text-align:right; margin-bottom:10px; border-top: 2px solid maroon; padding 2px">
+                    <input type="button" class="btn btn-primary" value="Add pizza">    
+                </div>
+            </div>
+        }
+</div>
