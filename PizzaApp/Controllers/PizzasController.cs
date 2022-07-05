@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PizzaApp.Data;
 using PizzaApp.Models;
-
 namespace PizzaApp.Controllers
 {
     public class PizzasController : Controller
@@ -18,15 +13,18 @@ namespace PizzaApp.Controllers
         {
             _context = context;
         }
-
+        public async Task<Pizza> GetByIdAsync(int? id)
+        {
+            return await _context.Pizzas.FirstOrDefaultAsync(p => p.Id == id);
+        }
         // GET: Pizzas
         public async Task<IActionResult> Index()
         {
             var appDbContext = _context.Pizzas.Include(p => p.Category);
             return View(await appDbContext.ToListAsync());
         }
-        
 
+        
         public async Task<IActionResult> AllPizzas(string searchText = "")
         {
             var pizza = from m in _context.Pizzas

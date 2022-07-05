@@ -7,157 +7,67 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PizzaApp.Data;
 using PizzaApp.Models;
+using PizzaApp.Repositories;
+using PizzaApp.ViewModels;
 
 namespace PizzaApp.Controllers
 {
     public class ShoppingCartsController : Controller
     {
+        private readonly IPizzaRepository _pizzaRepository;
         private readonly AppDbContext _context;
+        private readonly ShoppingCartAction _shoppingCart;
 
-        public ShoppingCartsController(AppDbContext context)
+        public ShoppingCartsController(IPizzaRepository pizzaRepository,
+            ShoppingCartAction shoppingCart, AppDbContext context)
         {
+            _pizzaRepository = pizzaRepository;
+            _shoppingCart = shoppingCart;
             _context = context;
         }
 
-        // GET: ShoppingCarts
         public async Task<IActionResult> Index()
         {
-              return _context.ShoppingCarts != null ? 
-                          View(await _context.ShoppingCarts.ToListAsync()) :
-                          Problem("Entity set 'AppDbContext.ShoppingCarts'  is null.");
+            var items = await _shoppingCart.GetShoppingCartItemsAsync();
+            _shoppingCart.ShoppingCartItems = items;
+
+            var shoppingCartViewModel = new ShoppingCartViewModel
+            {
+                ShoppingCart = _shoppingCart,
+                ShoppingCartTotal = _shoppingCart.GetShoppingCartTotal()
+            };
+
+            return View(shoppingCartViewModel);
         }
 
-        // GET: ShoppingCarts/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<IActionResult> AddToShoppingCart(int pizzaId)
         {
-            if (id == null || _context.ShoppingCarts == null)
-            {
-                return NotFound();
-            }
+            var selectedPizza = await _pizzaRepository.GetByIdAsync(pizzaId);
 
-            var shoppingCart = await _context.ShoppingCarts
-                .FirstOrDefaultAsync(m => m.ShoppingCartId == id);
-            if (shoppingCart == null)
+            if (selectedPizza != null)
             {
-                return NotFound();
+                await _shoppingCart.AddToCartAsync(selectedPizza, 1);
             }
-
-            return View(shoppingCart);
+            return RedirectToAction("Index");
         }
 
-        // GET: ShoppingCarts/Create
-        public IActionResult Create()
+        public async Task<IActionResult> RemoveFromShoppingCart(int pizzaId)
         {
-            return View();
+            var selectedPizza = await _pizzaRepository.GetByIdAsync(pizzaId);
+
+            if (selectedPizza != null)
+            {
+                await _shoppingCart.RemoveFromCartAsync(selectedPizza);
+            }
+            return RedirectToAction("Index");
         }
 
-        // POST: ShoppingCarts/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CartId,Amount,ShoppingCartId")] ShoppingCart shoppingCart)
+        public async Task<IActionResult> ClearCart()
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(shoppingCart);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(shoppingCart);
+            await _shoppingCart.ClearCartAsync();
+
+            return RedirectToAction("Index");
         }
 
-        // GET: ShoppingCarts/Edit/5
-        public async Task<IActionResult> Edit(string id)
-        {
-            if (id == null || _context.ShoppingCarts == null)
-            {
-                return NotFound();
-            }
-
-            var shoppingCart = await _context.ShoppingCarts.FindAsync(id);
-            if (shoppingCart == null)
-            {
-                return NotFound();
-            }
-            return View(shoppingCart);
-        }
-
-        // POST: ShoppingCarts/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("CartId,Amount,ShoppingCartId")] ShoppingCart shoppingCart)
-        {
-            if (id != shoppingCart.ShoppingCartId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(shoppingCart);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ShoppingCartExists(shoppingCart.ShoppingCartId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(shoppingCart);
-        }
-
-        // GET: ShoppingCarts/Delete/5
-        public async Task<IActionResult> Delete(string id)
-        {
-            if (id == null || _context.ShoppingCarts == null)
-            {
-                return NotFound();
-            }
-
-            var shoppingCart = await _context.ShoppingCarts
-                .FirstOrDefaultAsync(m => m.ShoppingCartId == id);
-            if (shoppingCart == null)
-            {
-                return NotFound();
-            }
-
-            return View(shoppingCart);
-        }
-
-        // POST: ShoppingCarts/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
-        {
-            if (_context.ShoppingCarts == null)
-            {
-                return Problem("Entity set 'AppDbContext.ShoppingCarts'  is null.");
-            }
-            var shoppingCart = await _context.ShoppingCarts.FindAsync(id);
-            if (shoppingCart != null)
-            {
-                _context.ShoppingCarts.Remove(shoppingCart);
-            }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool ShoppingCartExists(string id)
-        {
-          return (_context.ShoppingCarts?.Any(e => e.ShoppingCartId == id)).GetValueOrDefault();
-        }
     }
 }

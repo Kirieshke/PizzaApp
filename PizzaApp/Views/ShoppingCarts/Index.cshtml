@@ -1,41 +1,50 @@
-﻿@model IEnumerable<PizzaApp.Models.ShoppingCart>
+﻿@using PizzaApp.ViewModels;
+@model ShoppingCartViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    var pageName = "Shopping Cart";
+    ViewData["Title"] = pageName;
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+<h2>Your @pageName</h2>
+<h4>Here are the yummy pizzas in your shopping cart.</h4>
+<table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CartId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Amount)
-            </th>
-            <th></th>
+            <th>Selected Amount</th>
+            <th>Pizza</th>
+            <th class="text-right">Price</th>
+            <th class="text-right">Subtotal</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+        @foreach (var line in Model.ShoppingCart.ShoppingCartItems)
+        {
+            <tr>
+                <td class="text-center"><a class="btn btn-default" asp-action="RemoveFromShoppingCart" asp-route-pizzaId="@line.Pizza.Id"><b>-</b></a>          <b>@line.Amount</b>          <a class="btn btn-default" asp-action="AddToShoppingCart" asp-route-pizzaId="@line.Pizza.Id"><b>+</b></a></td>
+                <td class="text-left">@line.Pizza.Name</td>
+                <td class="text-right">@line.Pizza.Price.ToString("c")</td>
+                <td class="text-right">
+                    @((line.Amount * line.Pizza.Price).ToString("c"))
+                </td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
         <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.CartId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Amount)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ShoppingCartId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ShoppingCartId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ShoppingCartId">Delete</a>
+            <td colspan="3" class="text-right">Total:</td>
+            <td class="text-right">
+                @Model.ShoppingCartTotal.ToString("c")
             </td>
         </tr>
-}
-    </tbody>
+    </tfoot>
 </table>
+
+<div align="right">
+  
+        <a asp-controller="Orders" asp-action="Checkout" class="btn btn-primary">Check Out</a>
+    
+</div>
+<div align="left">
+    <a asp-controller="ShoppingCart" asp-action="ClearCart" class="btn btn-danger">Clear Cart</a>
+</div>

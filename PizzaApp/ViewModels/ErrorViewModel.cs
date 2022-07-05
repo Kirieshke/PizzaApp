@@ -1,4 +1,4 @@
-namespace PizzaApp.Models
+namespace PizzaApp.ViewModels
 {
     public class ErrorViewModel
     {
